@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "pages/api/check-updates.ts": {
+      "maxDuration": 10
+    },
+    "pages/api/get-latest.ts": {
+      "maxDuration": 10
+    }
+  }
+}
