@@ -1,13 +1,8 @@
-# .github/workflows/api-monitor.yml
 name: API Monitor
 
 on:
   schedule:
-    # 매 15분마다 실행 (UTC 기준)
-    # 분 시 일 월 요일
-    - cron: '*/15 * * * *'
-  
-  # 수동 실행 옵션
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -16,34 +11,31 @@ jobs:
     
     steps:
     - name: Check API Updates
+      env:
+        CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
       run: |
-        echo "Checking API for updates..."
+        echo "Starting API check..."
+        
+        if [ -z "${API_ENDPOINT}" ]; then
+          echo "API_ENDPOINT is not set. Please set it in GitHub Secrets."
+          exit 0
+        fi
         
         response=$(curl -s -w "\n%{http_code}" -X POST \
-          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -H "Authorization: Bearer ${CRON_SECRET}" \
           -H "Content-Type: application/json" \
-          "${{ secrets.API_ENDPOINT }}/api/check-updates")
+          "${API_ENDPOINT}/api/check-updates")
         
         http_code=$(echo "$response" | tail -n1)
         body=$(echo "$response" | sed '$d')
         
-        echo "Response body: $body"
-        echo "HTTP status code: $http_code"
+        echo "Response: $body"
+        echo "HTTP Code: $http_code"
         
         if [ "$http_code" -ne 200 ]; then
-          echo "❌ API check failed with status code: $http_code"
+          echo "API check failed with status code: $http_code"
           exit 1
-        else
-          echo "✅ API check completed successfully"
         fi
-
-  # 선택사항: 실패 시 알림
-  notify-on-failure:
-    needs: check-api
-    if: failure()
-    runs-on: ubuntu-latest
-    steps:
-    - name: Notify failure
-      run: |
-        echo "API monitoring failed! Check the logs."
-        # 여기에 Slack, Discord 등 알림 추가 가능
+        
+        echo "API check completed successfully"
