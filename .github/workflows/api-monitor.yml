@@ -1,0 +1,49 @@
+# .github/workflows/api-monitor.yml
+name: API Monitor
+
+on:
+  schedule:
+    # 매 15분마다 실행 (UTC 기준)
+    # 분 시 일 월 요일
+    - cron: '*/15 * * * *'
+  
+  # 수동 실행 옵션
+  workflow_dispatch:
+
+jobs:
+  check-api:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check API Updates
+      run: |
+        echo "Checking API for updates..."
+        
+        response=$(curl -s -w "\n%{http_code}" -X POST \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -H "Content-Type: application/json" \
+          "${{ secrets.API_ENDPOINT }}/api/check-updates")
+        
+        http_code=$(echo "$response" | tail -n1)
+        body=$(echo "$response" | sed '$d')
+        
+        echo "Response body: $body"
+        echo "HTTP status code: $http_code"
+        
+        if [ "$http_code" -ne 200 ]; then
+          echo "❌ API check failed with status code: $http_code"
+          exit 1
+        else
+          echo "✅ API check completed successfully"
+        fi
+
+  # 선택사항: 실패 시 알림
+  notify-on-failure:
+    needs: check-api
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Notify failure
+      run: |
+        echo "API monitoring failed! Check the logs."
+        # 여기에 Slack, Discord 등 알림 추가 가능
