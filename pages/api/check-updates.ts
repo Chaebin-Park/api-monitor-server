@@ -1,4 +1,3 @@
-// pages/api/check-updates.ts (개선된 버전)
 import { NextApiRequest, NextApiResponse } from 'next';
 import clientPromise from '../../lib/mongodb';
 import admin from '../../lib/firebase-admin';
@@ -18,7 +17,42 @@ export default async function handler(
     console.log('Starting subway notification check...');
     
     // 1. 지하철 알림 API 데이터 가져오기
-    const apiResponse = await fetchPublicApiData();
+    let apiResponse;
+    try {
+      apiResponse = await fetchPublicApiData();
+    } catch (apiError: any) {
+      console.error('Failed to fetch public API:', apiError.message);
+      
+      // API 에러 시 처리
+      if (apiError.message.includes('SERVICE_KEY_IS_NOT_REGISTERED_ERROR')) {
+        return res.status(503).json({
+          success: false,
+          error: 'Service key error',
+          message: '공공 API 서비스 키가 유효하지 않습니다. Vercel 환경변수를 확인하세요.',
+          details: {
+            hint: 'PUBLIC_API_KEY가 올바르게 설정되었는지 확인하세요.',
+            code: 'SERVICE_KEY_ERROR'
+          }
+        });
+      }
+      
+      // 기타 API 에러
+      return res.status(502).json({
+        success: false,
+        error: 'Public API error',
+        message: apiError.message || 'Failed to fetch subway data'
+      });
+    }
+    
+    // 정상 응답인지 확인
+    if (!apiResponse || typeof apiResponse !== 'object') {
+      console.error('Invalid API response:', apiResponse);
+      return res.status(502).json({
+        success: false,
+        error: 'Invalid response',
+        message: 'Public API returned invalid data'
+      });
+    }
     
     // 알림이 있는지 확인
     const notifications = apiResponse?.items?.item;
