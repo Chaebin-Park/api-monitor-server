@@ -109,7 +109,6 @@ export default async function handler(
       
       // FCM 알림 발송
       try {
-        // 가장 최근 알림 정보
         const latestNotification = newNotifications[0];
         
         const message = {
