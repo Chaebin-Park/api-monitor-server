@@ -139,8 +139,8 @@ export default function MockEventPage() {
         <h2>✏️ 커스텀 이벤트</h2>
         <div style={{ marginTop: '1rem' }}>
           <input
-            type="text"
-            placeholder="알림 제목"
+            type='text'
+            placeholder='알림 제목'
             value={customData.title}
             onChange={(e) => setCustomData({ ...customData, title: e.target.value })}
             style={{
@@ -152,7 +152,7 @@ export default function MockEventPage() {
             }}
           />
           <textarea
-            placeholder="알림 내용"
+            placeholder='알림 내용'
             value={customData.content}
             onChange={(e) => setCustomData({ ...customData, content: e.target.value })}
             style={{
@@ -165,8 +165,8 @@ export default function MockEventPage() {
             }}
           />
           <input
-            type="text"
-            placeholder="호선 (예: 1호선, 2호선)"
+            type='text'
+            placeholder='호선 (예: 1호선, 2호선)'
             value={customData.lines}
             onChange={(e) => setCustomData({ ...customData, lines: e.target.value })}
             style={{
@@ -236,8 +236,8 @@ export default function MockEventPage() {
       <div style={{ marginTop: '3rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
         <h3>💡 사용 방법</h3>
         <ol>
-          <li>샘플 이벤트에서 "FCM 전송" 클릭 → 앱에 푸시 알림 전송</li>
-          <li>"DB만 저장" 클릭 → MongoDB에만 저장 (알림 없음)</li>
+          <li>샘플 이벤트에서 'FCM 전송' 클릭 → 앱에 푸시 알림 전송</li>
+          <li>'DB만 저장' 클릭 → MongoDB에만 저장 (알림 없음)</li>
           <li>커스텀 이벤트로 원하는 내용의 알림 생성</li>
           <li>Android 앱에서 알림을 받았는지 확인</li>
         </ol>

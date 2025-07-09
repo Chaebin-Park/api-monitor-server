@@ -49,10 +49,10 @@ export default function TestPage() {
         <label>
           CRON_SECRET: 
           <input
-            type="password"
+            type='password'
             value={cronSecret}
             onChange={(e) => setCronSecret(e.target.value)}
-            placeholder="Vercel에서 확인한 CRON_SECRET"
+            placeholder='Vercel에서 확인한 CRON_SECRET'
             style={{ marginLeft: '0.5rem', width: '300px' }}
           />
         </label>
@@ -99,7 +99,7 @@ export default function TestPage() {
         <ol>
           <li>Vercel Dashboard에서 CRON_SECRET 확인</li>
           <li>위 입력란에 붙여넣기</li>
-          <li>"인증 포함" 버튼 클릭</li>
+          <li>'인증 포함' 버튼 클릭</li>
         </ol>
         
         <h3>예상 결과:</h3>
