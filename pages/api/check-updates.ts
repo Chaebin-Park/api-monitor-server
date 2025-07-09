@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import clientPromise from '../../lib/mongodb';
 import admin from '../../lib/firebase-admin';
-import { fetchPublicApiData, generateDataHash } from '../../utils/api-checker';
+import { fetchPublicApiData } from '../../utils/api-checker';
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,11 +20,12 @@ export default async function handler(
     let apiResponse;
     try {
       apiResponse = await fetchPublicApiData();
-    } catch (apiError: any) {
-      console.error('Failed to fetch public API:', apiError.message);
+    } catch (apiError) {
+      const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown error';
+      console.error('Failed to fetch public API:', errorMessage);
       
       // API 에러 시 처리
-      if (apiError.message.includes('SERVICE_KEY_IS_NOT_REGISTERED_ERROR')) {
+      if (errorMessage.includes('SERVICE_KEY_IS_NOT_REGISTERED_ERROR')) {
         return res.status(503).json({
           success: false,
           error: 'Service key error',
@@ -40,7 +41,7 @@ export default async function handler(
       return res.status(502).json({
         success: false,
         error: 'Public API error',
-        message: apiError.message || 'Failed to fetch subway data'
+        message: errorMessage
       });
     }
     
