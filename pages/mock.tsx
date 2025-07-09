@@ -1,3 +1,4 @@
+
 // pages/mock.tsx
 // 브라우저에서 테스트 이벤트를 생성하는 UI
 
@@ -5,7 +6,7 @@ import { useState } from 'react';
 
 export default function MockEventPage() {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [customData, setCustomData] = useState({
     title: '',
     content: '',
@@ -18,7 +19,7 @@ export default function MockEventPage() {
     setResult(null);
 
     try {
-      const body: any = { type, sendFCM };
+      const body: { type: string; sendFCM: boolean; notification?: Record<string, string> } = { type, sendFCM };
       
       if (type === 'custom') {
         body.notification = {
@@ -236,8 +237,8 @@ export default function MockEventPage() {
       <div style={{ marginTop: '3rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
         <h3>💡 사용 방법</h3>
         <ol>
-          <li>샘플 이벤트에서 'FCM 전송' 클릭 → 앱에 푸시 알림 전송</li>
-          <li>'DB만 저장' 클릭 → MongoDB에만 저장 (알림 없음)</li>
+          <li>샘플 이벤트에서 &apos;FCM 전송&apos; 클릭 → 앱에 푸시 알림 전송</li>
+          <li>&apos;DB만 저장&apos; 클릭 → MongoDB에만 저장 (알림 없음)</li>
           <li>커스텀 이벤트로 원하는 내용의 알림 생성</li>
           <li>Android 앱에서 알림을 받았는지 확인</li>
         </ol>

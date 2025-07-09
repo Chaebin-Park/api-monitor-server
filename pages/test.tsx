@@ -4,7 +4,7 @@
 import { useState } from 'react';
 
 export default function TestPage() {
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
   const [cronSecret, setCronSecret] = useState('');
   
@@ -99,7 +99,7 @@ export default function TestPage() {
         <ol>
           <li>Vercel Dashboard에서 CRON_SECRET 확인</li>
           <li>위 입력란에 붙여넣기</li>
-          <li>'인증 포함' 버튼 클릭</li>
+          <li>&apos;인증 포함&apos; 버튼 클릭</li>
         </ol>
         
         <h3>예상 결과:</h3>
