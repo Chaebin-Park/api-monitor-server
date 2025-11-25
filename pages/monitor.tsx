@@ -2,15 +2,44 @@ import { useState, useEffect } from "react";
 import Head from "next/head";
 import styles from "@/styles/Monitor.module.css";
 
-interface ApiData {
-  success: boolean;
-  data: Record<string, unknown>;
+interface SubwayNoticeItem {
+  noftTtl: string;
+  noftCn: string;
+  noftOcrnDt: string;
+  lineNmLst: string;
+  stnSctnCdLst: string | null;
+  crtrYmd: string;
+  noftSeCd: string;
+  nonstopYn: string;
+  upbdnbSe: string;
+  xcseSitnBgngDt: string | null;
+  xcseSitnEndDt: string | null;
+}
+
+interface SubwayData {
+  items: {
+    item: SubwayNoticeItem[];
+  };
+  pageNo: number;
+  numOfRows: number;
+  totalCount: number;
+}
+
+interface ApiDataItem {
+  _id: string;
+  data: SubwayData;
   timestamp: string;
   hash: string;
 }
 
+interface ApiResponse {
+  success: boolean;
+  data: ApiDataItem[];
+  count: number;
+}
+
 export default function Monitor() {
-  const [apiData, setApiData] = useState<ApiData | null>(null);
+  const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,7 +48,13 @@ export default function Monitor() {
     setError(null);
 
     try {
-      const response = await fetch("/api/get-latest");
+      const response = await fetch("/api/get-all", {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -33,7 +68,9 @@ export default function Monitor() {
       const data = await response.json();
       setApiData(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다");
+      setError(
+        err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다"
+      );
       setApiData(null);
     } finally {
       setLoading(false);
@@ -60,18 +97,50 @@ export default function Monitor() {
     });
   };
 
+  const getLineColor = (lineName: string) => {
+    const lineColors: Record<string, string> = {
+      "1호선": "#0052A4",
+      "2호선": "#00A84D",
+      "3호선": "#EF7C1C",
+      "4호선": "#00A5DE",
+      "5호선": "#996CAC",
+      "6호선": "#CD7C2F",
+      "7호선": "#747F00",
+      "8호선": "#E6186C",
+      "9호선": "#BDB092",
+    };
+
+    for (const [key, color] of Object.entries(lineColors)) {
+      if (lineName.includes(key)) {
+        return color;
+      }
+    }
+    return "#999";
+  };
+
+  const getNoticeTypeLabel = (noftSeCd: string) => {
+    const types: Record<string, string> = {
+      "1": "운행중지",
+      "2": "지연",
+      "3": "서행",
+      "4": "우회",
+      "5": "기타",
+    };
+    return types[noftSeCd] || "알림";
+  };
+
   return (
     <>
       <Head>
-        <title>API Monitor Dashboard</title>
-        <meta name="description" content="API 모니터링 대시보드" />
+        <title>지하철 운행 정보 모니터</title>
+        <meta name="description" content="지하철 운행 정보 모니터링 대시보드" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <div className={styles.container}>
         <header className={styles.header}>
-          <h1>API 모니터 대시보드</h1>
+          <h1>🚇 지하철 운행 정보</h1>
           <button
             onClick={handleRefresh}
             disabled={loading}
@@ -102,27 +171,66 @@ export default function Monitor() {
             </div>
           )}
 
-          {apiData && (
+          {apiData && apiData.data && (
             <div className={styles.dataContainer}>
-              <div className={styles.metaInfo}>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>마지막 업데이트:</span>
-                  <span className={styles.metaValue}>
-                    {formatTimestamp(apiData.timestamp)}
-                  </span>
-                </div>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>해시:</span>
-                  <span className={styles.metaValue}>{apiData.hash}</span>
-                </div>
+              <div className={styles.summary}>
+                <p>총 {apiData.count}개의 데이터 세트</p>
               </div>
 
-              <div className={styles.dataSection}>
-                <h2>API 데이터</h2>
-                <div className={styles.jsonViewer}>
-                  <pre>{JSON.stringify(apiData.data, null, 2)}</pre>
+              {apiData.data.map((dataItem) => (
+                <div key={dataItem._id} className={styles.dataSet}>
+                  <div className={styles.dataSetHeader}>
+                    <div className={styles.timestamp}>
+                      📅 {formatTimestamp(dataItem.timestamp)}
+                    </div>
+                    <div className={styles.hash}>해시: {dataItem.hash}</div>
+                  </div>
+
+                  {dataItem.data.items?.item &&
+                  dataItem.data.items.item.length > 0 ? (
+                    <div className={styles.noticeList}>
+                      {dataItem.data.items.item.map((notice, index) => (
+                        <div key={index} className={styles.noticeCard}>
+                          <div className={styles.noticeHeader}>
+                            <div
+                              className={styles.lineBadge}
+                              style={{
+                                backgroundColor: getLineColor(notice.lineNmLst),
+                              }}
+                            >
+                              {notice.lineNmLst}
+                            </div>
+                            <div className={styles.noticeType}>
+                              {getNoticeTypeLabel(notice.noftSeCd)}
+                            </div>
+                            <div className={styles.direction}>
+                              {notice.upbdnbSe}
+                            </div>
+                          </div>
+
+                          <h3 className={styles.noticeTitle}>
+                            {notice.noftTtl}
+                          </h3>
+
+                          <p className={styles.noticeContent}>
+                            {notice.noftCn}
+                          </p>
+
+                          <div className={styles.noticeFooter}>
+                            <span className={styles.noticeDate}>
+                              발생일시: {notice.noftOcrnDt}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.noNotice}>
+                      ✅ 현재 운행 장애 없음 (공지사항 없음)
+                    </div>
+                  )}
                 </div>
-              </div>
+              ))}
             </div>
           )}
         </main>
