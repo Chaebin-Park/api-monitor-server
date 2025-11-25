@@ -2,13 +2,36 @@
 import axios from 'axios';
 import crypto from 'crypto';
 
+export interface SubwayNoticeItem {
+  noftTtl: string;
+  noftCn: string;
+  noftOcrnDt: string;
+  lineNmLst: string;
+  stnSctnCdLst: string | null;
+  crtrYmd: string;
+  noftSeCd: string;
+  nonstopYn: string;
+  upbdnbSe: string;
+  xcseSitnBgngDt: string | null;
+  xcseSitnEndDt: string | null;
+}
+
+export interface SubwayApiResponse {
+  items?: {
+    item?: SubwayNoticeItem | SubwayNoticeItem[];
+  };
+  pageNo: number;
+  numOfRows: number;
+  totalCount: number;
+}
+
 export interface ApiData {
-  data: Record<string, unknown>;
+  data: SubwayApiResponse;
   hash: string;
   timestamp: Date;
 }
 
-export async function fetchPublicApiData(): Promise<Record<string, unknown>> {
+export async function fetchPublicApiData(): Promise<SubwayApiResponse> {
   try {
     // 오늘 날짜 구하기 (YYYYMMDD 형식)
     const today = new Date();
@@ -86,7 +109,7 @@ export async function fetchPublicApiData(): Promise<Record<string, unknown>> {
   }
 }
 
-export function generateDataHash(data: Record<string, unknown>): string {
+export function generateDataHash(data: SubwayApiResponse): string {
   const jsonString = JSON.stringify(data);
   return crypto.createHash('md5').update(jsonString).digest('hex');
 }
