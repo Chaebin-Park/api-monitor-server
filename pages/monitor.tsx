@@ -173,17 +173,12 @@ export default function Monitor() {
 
           {apiData && apiData.data && (
             <div className={styles.dataContainer}>
-              <div className={styles.summary}>
-                <p>총 {apiData.count}개의 데이터 세트</p>
-              </div>
-
               {apiData.data.map((dataItem) => (
                 <div key={dataItem._id} className={styles.dataSet}>
                   <div className={styles.dataSetHeader}>
                     <div className={styles.timestamp}>
-                      📅 {formatTimestamp(dataItem.timestamp)}
+                      📅  {formatTimestamp(dataItem.timestamp)}
                     </div>
-                    <div className={styles.hash}>해시: {dataItem.hash}</div>
                   </div>
 
                   {dataItem.data.items?.item &&
