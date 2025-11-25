@@ -81,8 +81,41 @@ export default function Monitor() {
     fetchData();
   }, []);
 
-  const handleRefresh = () => {
-    fetchData();
+  const handleRefresh = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 지하철 API를 즉시 호출하고 DB에 저장
+      const response = await fetch("/api/refresh-data", {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          setError("데이터가 없습니다");
+          setApiData(null);
+          return;
+        }
+        const errorData = await response.json();
+        throw new Error(errorData.message || "데이터를 불러오는데 실패했습니다");
+      }
+
+      const data = await response.json();
+      setApiData(data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다"
+      );
+      setApiData(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatTimestamp = (timestamp: string) => {

@@ -3,12 +3,12 @@ import axios from 'axios';
 import crypto from 'crypto';
 
 export interface ApiData {
-  data: any;
+  data: Record<string, unknown>;
   hash: string;
   timestamp: Date;
 }
 
-export async function fetchPublicApiData(): Promise<any> {
+export async function fetchPublicApiData(): Promise<Record<string, unknown>> {
   try {
     // 오늘 날짜 구하기 (YYYYMMDD 형식)
     const today = new Date();
@@ -86,7 +86,7 @@ export async function fetchPublicApiData(): Promise<any> {
   }
 }
 
-export function generateDataHash(data: any): string {
+export function generateDataHash(data: Record<string, unknown>): string {
   const jsonString = JSON.stringify(data);
   return crypto.createHash('md5').update(jsonString).digest('hex');
 }
