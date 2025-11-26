@@ -110,7 +110,12 @@ export async function fetchPublicApiData(): Promise<SubwayApiResponse> {
 }
 
 export function generateDataHash(data: SubwayApiResponse): string {
-  const jsonString = JSON.stringify(data);
+  // 실제 알림 데이터만 해시 생성 (메타데이터 제외)
+  // pageNo, numOfRows, totalCount는 제외하고 items만 해시화
+  const contentForHash = {
+    items: data.items
+  };
+  const jsonString = JSON.stringify(contentForHash);
   return crypto.createHash('md5').update(jsonString).digest('hex');
 }
 
