@@ -79,6 +79,14 @@ export default function Monitor() {
 
   useEffect(() => {
     fetchData();
+
+    // 1분마다 자동으로 데이터 새로고침
+    const intervalId = setInterval(() => {
+      fetchData();
+    }, 60000); // 60초 = 1분
+
+    // cleanup: 컴포넌트 unmount 시 interval 정리
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleRefresh = async () => {

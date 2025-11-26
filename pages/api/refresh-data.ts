@@ -46,19 +46,38 @@ export default async function handler(
     // 3. 데이터 해시 생성
     const dataHash = generateDataHash(apiResponse);
 
-    // 4. DB에 저장 (무조건 저장 - 새로고침이므로)
-    const newRecord = {
-      data: apiResponse,
-      hash: dataHash,
-      timestamp: new Date(),
-      totalCount: apiResponse.totalCount || 0,
-      refreshedManually: true, // 수동 새로고침 표시
-    };
+    // 4. 가장 최근 데이터 확인
+    const latestData = await collection
+      .findOne({}, { sort: { timestamp: -1 } });
 
-    await collection.insertOne(newRecord);
-    console.log('Data saved to DB with hash:', dataHash);
+    let shouldInsertNew = true;
 
-    // 5. 저장된 모든 데이터 반환
+    // 5. 최근 데이터와 해시 비교
+    if (latestData && latestData.hash === dataHash) {
+      // 데이터가 동일하면 timestamp만 업데이트
+      await collection.updateOne(
+        { _id: latestData._id },
+        { $set: { timestamp: new Date(), refreshedManually: true } }
+      );
+      console.log('Data unchanged. Updated timestamp only for existing record:', dataHash);
+      shouldInsertNew = false;
+    }
+
+    // 6. 데이터가 다르면 새로운 레코드 삽입
+    if (shouldInsertNew) {
+      const newRecord = {
+        data: apiResponse,
+        hash: dataHash,
+        timestamp: new Date(),
+        totalCount: apiResponse.totalCount || 0,
+        refreshedManually: true,
+      };
+
+      await collection.insertOne(newRecord);
+      console.log('New data saved to DB with hash:', dataHash);
+    }
+
+    // 7. 저장된 모든 데이터 반환
     const allData = await collection
       .find({})
       .sort({ timestamp: -1 })
