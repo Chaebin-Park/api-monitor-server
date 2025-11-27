@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import clientPromise from '../../lib/mongodb';
-import { fetchPublicApiData, generateDataHash } from '../../utils/api-checker';
+import { fetchPublicApiData, generateDataHash, isSameContent } from '../../utils/api-checker';
 
 export default async function handler(
   req: NextApiRequest,
@@ -43,7 +43,7 @@ export default async function handler(
     const db = client.db('api-monitor');
     const collection = db.collection('api-data');
 
-    // 3. 데이터 해시 생성
+    // 3. 데이터 해시 생성 (저장용)
     const dataHash = generateDataHash(apiResponse);
 
     // 4. 가장 최근 데이터 확인
@@ -52,15 +52,19 @@ export default async function handler(
 
     let shouldInsertNew = true;
 
-    // 5. 최근 데이터와 해시 비교
-    if (latestData && latestData.hash === dataHash) {
-      // 데이터가 동일하면 timestamp만 업데이트
-      await collection.updateOne(
-        { _id: latestData._id },
-        { $set: { timestamp: new Date(), refreshedManually: true } }
-      );
-      console.log('Data unchanged. Updated timestamp only for existing record:', dataHash);
-      shouldInsertNew = false;
+    // 5. 최근 데이터와 실제 내용 비교
+    if (latestData && latestData.data) {
+      const isSame = isSameContent(apiResponse, latestData.data);
+
+      if (isSame) {
+        // 데이터가 동일하면 timestamp만 업데이트
+        await collection.updateOne(
+          { _id: latestData._id },
+          { $set: { timestamp: new Date(), refreshedManually: true } }
+        );
+        console.log('Data unchanged. Updated timestamp only for existing record');
+        shouldInsertNew = false;
+      }
     }
 
     // 6. 데이터가 다르면 새로운 레코드 삽입

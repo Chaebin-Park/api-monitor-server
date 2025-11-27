@@ -122,3 +122,18 @@ export function generateDataHash(data: SubwayApiResponse): string {
 export function hasDataChanged(oldHash: string | null, newHash: string): boolean {
   return oldHash !== newHash;
 }
+
+// 두 API 응답의 실제 내용이 동일한지 비교
+export function isSameContent(data1: SubwayApiResponse, data2: SubwayApiResponse): boolean {
+  // items가 둘 다 없으면 동일
+  if (!data1.items && !data2.items) return true;
+
+  // 하나만 없으면 다름
+  if (!data1.items || !data2.items) return false;
+
+  // items 내용을 JSON 문자열로 변환하여 비교
+  const items1Str = JSON.stringify(data1.items);
+  const items2Str = JSON.stringify(data2.items);
+
+  return items1Str === items2Str;
+}

@@ -42,6 +42,7 @@ export default function Monitor() {
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -214,59 +215,141 @@ export default function Monitor() {
 
           {apiData && apiData.data && (
             <div className={styles.dataContainer}>
-              {apiData.data.map((dataItem) => (
-                <div key={dataItem._id} className={styles.dataSet}>
-                  <div className={styles.dataSetHeader}>
-                    <div className={styles.timestamp}>
-                      📅  {formatTimestamp(dataItem.timestamp)}
-                    </div>
-                  </div>
+              {/* 최신 데이터 (오늘의 이슈) */}
+              {apiData.data.length > 0 && (
+                <div className={styles.latestSection}>
+                  <h2 className={styles.sectionTitle}>🔴 최신 이슈</h2>
+                  {(() => {
+                    const latestItem = apiData.data[0];
+                    return (
+                      <div key={latestItem._id} className={styles.dataSet}>
+                        <div className={styles.dataSetHeader}>
+                          <div className={styles.timestamp}>
+                            📅 {formatTimestamp(latestItem.timestamp)}
+                          </div>
+                        </div>
 
-                  {dataItem.data.items?.item &&
-                  dataItem.data.items.item.length > 0 ? (
-                    <div className={styles.noticeList}>
-                      {dataItem.data.items.item.map((notice, index) => (
-                        <div key={index} className={styles.noticeCard}>
-                          <div className={styles.noticeHeader}>
-                            <div
-                              className={styles.lineBadge}
-                              style={{
-                                backgroundColor: getLineColor(notice.lineNmLst),
-                              }}
-                            >
-                              {notice.lineNmLst}
-                            </div>
-                            <div className={styles.noticeType}>
-                              {getNoticeTypeLabel(notice.noftSeCd)}
-                            </div>
-                            <div className={styles.direction}>
-                              {notice.upbdnbSe}
+                        {latestItem.data.items?.item &&
+                        latestItem.data.items.item.length > 0 ? (
+                          <div className={styles.noticeList}>
+                            {latestItem.data.items.item.map((notice, index) => (
+                              <div key={index} className={styles.noticeCard}>
+                                <div className={styles.noticeHeader}>
+                                  <div
+                                    className={styles.lineBadge}
+                                    style={{
+                                      backgroundColor: getLineColor(notice.lineNmLst),
+                                    }}
+                                  >
+                                    {notice.lineNmLst}
+                                  </div>
+                                  <div className={styles.noticeType}>
+                                    {getNoticeTypeLabel(notice.noftSeCd)}
+                                  </div>
+                                  <div className={styles.direction}>
+                                    {notice.upbdnbSe}
+                                  </div>
+                                </div>
+
+                                <h3 className={styles.noticeTitle}>
+                                  {notice.noftTtl}
+                                </h3>
+
+                                <p className={styles.noticeContent}>
+                                  {notice.noftCn}
+                                </p>
+
+                                <div className={styles.noticeFooter}>
+                                  <span className={styles.noticeDate}>
+                                    발생일시: {notice.noftOcrnDt}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className={styles.noNotice}>
+                            ✅ 현재 운행 장애 없음 (공지사항 없음)
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* 과거 기록 */}
+              {apiData.data.length > 1 && (
+                <div className={styles.historySection}>
+                  <button
+                    className={styles.historyToggle}
+                    onClick={() => setShowHistory(!showHistory)}
+                  >
+                    {showHistory ? "📂 과거 기록 접기" : "📁 과거 기록 보기"}
+                    <span className={styles.historyCount}>
+                      ({apiData.data.length - 1}건)
+                    </span>
+                  </button>
+
+                  {showHistory && (
+                    <div className={styles.historyList}>
+                      {apiData.data.slice(1).map((dataItem) => (
+                        <div key={dataItem._id} className={styles.dataSet}>
+                          <div className={styles.dataSetHeader}>
+                            <div className={styles.timestamp}>
+                              📅 {formatTimestamp(dataItem.timestamp)}
                             </div>
                           </div>
 
-                          <h3 className={styles.noticeTitle}>
-                            {notice.noftTtl}
-                          </h3>
+                          {dataItem.data.items?.item &&
+                          dataItem.data.items.item.length > 0 ? (
+                            <div className={styles.noticeList}>
+                              {dataItem.data.items.item.map((notice, index) => (
+                                <div key={index} className={styles.noticeCard}>
+                                  <div className={styles.noticeHeader}>
+                                    <div
+                                      className={styles.lineBadge}
+                                      style={{
+                                        backgroundColor: getLineColor(notice.lineNmLst),
+                                      }}
+                                    >
+                                      {notice.lineNmLst}
+                                    </div>
+                                    <div className={styles.noticeType}>
+                                      {getNoticeTypeLabel(notice.noftSeCd)}
+                                    </div>
+                                    <div className={styles.direction}>
+                                      {notice.upbdnbSe}
+                                    </div>
+                                  </div>
 
-                          <p className={styles.noticeContent}>
-                            {notice.noftCn}
-                          </p>
+                                  <h3 className={styles.noticeTitle}>
+                                    {notice.noftTtl}
+                                  </h3>
 
-                          <div className={styles.noticeFooter}>
-                            <span className={styles.noticeDate}>
-                              발생일시: {notice.noftOcrnDt}
-                            </span>
-                          </div>
+                                  <p className={styles.noticeContent}>
+                                    {notice.noftCn}
+                                  </p>
+
+                                  <div className={styles.noticeFooter}>
+                                    <span className={styles.noticeDate}>
+                                      발생일시: {notice.noftOcrnDt}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className={styles.noNotice}>
+                              ✅ 운행 장애 없음 (공지사항 없음)
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <div className={styles.noNotice}>
-                      ✅ 현재 운행 장애 없음 (공지사항 없음)
-                    </div>
                   )}
                 </div>
-              ))}
+              )}
             </div>
           )}
         </main>
